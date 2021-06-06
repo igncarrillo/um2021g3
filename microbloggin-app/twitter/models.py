@@ -10,8 +10,8 @@ from django.db.models.fields.mixins import FieldCacheMixin
 
 class User(models.Model):
     id = models.AutoField(primary_key=True)
-    nombre_usuario = models.CharField(max_length=16, default='')
-    telefono = models.PositiveIntegerField()
+    nombre_usuario = models.CharField(max_length=255, default='')
+    telefono = models.PositiveIntegerField(default=99999999)
     nombre = models.CharField(max_length=255, default='')
     apellido = models.CharField(max_length=255, default='')
     TIPOS_SEXO = [
@@ -25,20 +25,21 @@ class User(models.Model):
         default='Masculino',
     )
     fechaNac = models.DateField(default="1930-01-01")
-    email = models.EmailField(max_length=254)
+    email = models.EmailField(max_length=254, default="ejemplo@gmail.com")
 
-    class META:
+    class Meta:
         abstract = True
 
-    def __str__(self):
-        return f'NombreUsuario:{self.nombre_usuario}, Email:{self.email}'
 
 class Usuario(User):
     seguidores = models.JSONField(default=None)
     seguidos = models.JSONField(default=None)
 
+    def __str__(self):
+        return f'NombreUsuario: {self.nombre_usuario}, Email: {self.email}'
+
 class Administrador(User):
-    pass
+    prueba = models.TextField(default="as")
 
 class Publicacion(models.Model):
     id = models.AutoField(primary_key=True)

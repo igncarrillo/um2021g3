@@ -20,6 +20,8 @@ from twitter import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     re_path(r'^api/usuarios$', views.usuarios),
+    re_path(r'^api/usuarios/(?P<id>[0-9]+)$', views.usuario_detalle),
     re_path(r'^api/publicacion$', views.publicacion),
     re_path(r'^api/tendencia$', views.tendencia),
+
 ]

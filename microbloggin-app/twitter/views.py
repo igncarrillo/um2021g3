@@ -1,10 +1,12 @@
 from collections import defaultdict
 import re
+from django.http.request import HttpRequest
 from django.shortcuts import render
 
-from django.http.response import JsonResponse
+from django.http.response import HttpResponse, JsonResponse
 from rest_framework.parsers import JSONParser
 from rest_framework import status
+from rest_framework.utils.json import strict_constant
 
 from twitter.models import Usuario, Administrador, Publicacion, Tendencias, MensajePriv
 from twitter.serializers import UsuarioSerializer, AdminSerializer, PublicacionSerializer
@@ -23,12 +25,35 @@ def usuarios(request):
         return JsonResponse(usuarios_serializer.data, safe=False, status=status.HTTP_200_OK)
 
     elif request.method == 'POST':
-        usuario_data = JSONParser.parse(request, stream=None)
+        usuario_data = JSONParser.parse(request)
         usuarios_serializer = UsuarioSerializer(data=usuario_data)
         if usuarios_serializer.is_valid():
             usuarios_serializer.save()
             return JsonResponse(usuarios_serializer.data, status=status.HTTP_200_OK)
         return JsonResponse(usuarios_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def usuario_detalle(request, id):
+    try:
+        usuario = Usuario.objects.get(pk=id)
+    except Usuario.DoesNotExist:
+        return JsonResponse({'error': 'El usuario no existe'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        usuarios_serializer = UsuarioSerializer(usuario)
+        return JsonResponse(usuarios_serializer.data, status=status.HTTP_200_OK)
+
+    elif request.method == 'PUT':
+        usuario_data = JSONParser().parse(request)
+        try:
+            Usuario.objects.filter(pk=id).update(**usuario_data)
+            return JsonResponse({'update': usuario_data}, status=status.HTTP_200_OK)
+        except Exception as ex: 
+            return JsonResponse({'error': str(ex)}, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        usuario.delete()
+        return JsonResponse({'mensaje': 'usuario eliminada definitivamente!'}, status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['POST'])
 def publicacion(request):

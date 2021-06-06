@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'microbloggin.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'microblog',
+        'NAME': 'microblog2',
         'USER': 'root',
         'PASSWORD': '',
         'HOST': 'localhost',

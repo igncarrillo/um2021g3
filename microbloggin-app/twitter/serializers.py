@@ -8,17 +8,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Usuario
-        fields = {'id',
-        'nombre_usuario',
-        'telefono'
-        'nombre',
-        'apellido',
-        'sexo'
-        'fechaNac',
-        'email',
-        'seguidores',
-        'seguidos'
-        }
+        fields = '__all__'
 
 class AdminSerializer(serializers.ModelSerializer):
 
