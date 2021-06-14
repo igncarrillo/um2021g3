@@ -45,10 +45,10 @@ class Publicacion(models.Model):
     id = models.AutoField(primary_key=True)
     usuario = models.ForeignKey(Usuario, on_delete=CASCADE, related_name='realizada')
     contenido = models.CharField(max_length=254, default='')
-    etiqueta = models.JSONField(default=None)
-    mencion = models.ForeignKey(Usuario, on_delete=CASCADE, default=None, related_name='menciona')
+    etiqueta = models.JSONField(default="", null=True, blank=True)
+    mencion = models.ForeignKey(Usuario, null=True, blank=True, on_delete=CASCADE, default=None, related_name='menciona')
     fecha = models.DateField(auto_now_add=True)
-    republicacion = models.ForeignKey('self', null=True, on_delete=CASCADE, related_name='republica')
+    republicacion = models.ForeignKey('self', null=True, blank=True, on_delete=CASCADE, related_name='republica')
 
 class Tendencias(models.Model):
     id = models.AutoField(primary_key=True) #Una tendencia lleva id??

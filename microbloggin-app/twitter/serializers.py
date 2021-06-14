@@ -28,14 +28,7 @@ class PublicacionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Publicacion
-        fields = {'id',
-        'fecha'
-        'usuario'
-        'contenido'
-        'etiqueta'
-        'mencion'
-        'republicacion'
-        }
+        fields = '__all__'
 
 class TendenciaSerializer(serializers.ModelSerializer):
 
