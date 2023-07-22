@@ -28,6 +28,6 @@ urlpatterns = [
     re_path(r'^api/publicaciones$', views.publicacion),
     re_path(r'^api/perfil/(?P<id>[0-9]+)$', views.perfil),
     re_path(r'^api/tendencia$', views.tendencia),
-    re_path(r'^api/publicaciones/(?P<id>[0-9]+)$', views.modificar_publicacion),
-
+    re_path(r'^api/publicacion/(?P<id>[0-9]+)$', views.publicacion_detail),
+    
 ]

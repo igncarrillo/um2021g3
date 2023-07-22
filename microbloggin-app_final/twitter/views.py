@@ -69,24 +69,6 @@ def usuario_detalle(request, id):
         usuario.delete()
         return JsonResponse({'mensaje': 'usuario eliminada definitivamente!'}, status=status.HTTP_204_NO_CONTENT)
 
-@api_view(['GET','POST'])
-def publicacion(request):
-    if request.method == 'GET':
-        try:
-            publicaciones = Publicacion.objects.all()
-        except Publicacion.DoesNotExist:
-            return JsonResponse({'Error': 'No existe ninguna publicacion'}, status=status.HTTP_404_NOT_FOUND)
-        publicaciones_serializer = PublicacionSerializer(publicaciones, many = True)
-        return JsonResponse(publicaciones_serializer.data, safe=False, status=status.HTTP_200_OK)
-
-    if request.method == 'POST':
-        publicacion_data = JSONParser().parse(request)
-        publicacion_serializer = PublicacionSerializer(data=publicacion_data)
-        if publicacion_serializer.is_valid():
-            publicacion_serializer.save()
-            return JsonResponse(publicacion_serializer.data, status=status.HTTP_200_OK)
-        return JsonResponse(publicacion_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 @api_view(['GET'])
 def perfil(request, id):
     try:
@@ -118,22 +100,66 @@ def tendencia(request):
             return JsonResponse(tendencia_data.data, status=status.HTTP_200_OK)
         return JsonResponse(tendencia_data.errors, status=status.HTTP_400_BAD_REQUEST)
     
-
-@api_view(['PUT'])
-def modificar_publicacion(request, id):
-    if request.method == 'PUT':
+@api_view(['GET','POST'])
+def publicacion(request):
+    if request.method == 'GET':
         try:
-            publicacion = Publicacion.objects.get(pk=id)
+            publicaciones = Publicacion.objects.all()
         except Publicacion.DoesNotExist:
             return JsonResponse({'Error': 'No existe ninguna publicacion'}, status=status.HTTP_404_NOT_FOUND)
-        
-        datos = request.data
+        publicaciones_serializer = PublicacionSerializer(publicaciones, many = True)
+        return JsonResponse(publicaciones_serializer.data, safe=False, status=status.HTTP_200_OK)
 
-        publicacion.contenido = datos['contenido']
-        publicacion.etiqueta = datos['etiqueta']
+    if request.method == 'POST':
+        publicacion_data = JSONParser().parse(request)
+        publicacion_serializer = PublicacionSerializer(data=publicacion_data)
+        if publicacion_serializer.is_valid():
+            publicacion_serializer.save()
+            return JsonResponse(publicacion_serializer.data, status=status.HTTP_200_OK)
+        return JsonResponse(publicacion_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+# @api_view(['PUT'])
+# def modificar_publicacion(request, id):
+#     if request.method == 'PUT':
+#         try:
+#             publicacion = Publicacion.objects.get(pk=id)
+#         except Publicacion.DoesNotExist:
+#             return JsonResponse({'Error': 'No existe ninguna publicacion'}, status=status.HTTP_404_NOT_FOUND)
+        
+#         datos = request.data
+
+#         publicacion.contenido = datos['contenido']
+#         publicacion.etiqueta = datos['etiqueta']
+#         publicacion.is_edited = True
+#         publicacion.fecha = datetime.now().date()
+
+#         publicacion.save()
+
+#         return JsonResponse(datos, status=status.HTTP_200_OK)
+
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def publicacion_detail(request, id):
+    try:
+        publicacion = Publicacion.objects.get(pk=id)
+    except Publicacion.DoesNotExist:
+        return JsonResponse({'Error': 'No existe ninguna publicacion'}, status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        publicacion_serializer = PublicacionSerializer(publicacion)
+        return JsonResponse(publicacion_serializer.data, status=status.HTTP_200_OK)
+    
+    if request.method == 'PUT':
+        publicacion_data = request.data
+        publicacion.contenido = publicacion_data.get('contenido', publicacion.contenido)
+        publicacion.etiqueta = publicacion_data.get('etiqueta', publicacion.etiqueta)
         publicacion.is_edited = True
         publicacion.fecha = datetime.now().date()
-
         publicacion.save()
-
-        return JsonResponse(datos, status=status.HTTP_200_OK)
+        publicacion_serializer = PublicacionSerializer(publicacion)
+        return JsonResponse(publicacion_serializer.data, status=status.HTTP_200_OK)
+    
+    if request.method == 'DELETE':
+        publicacion.delete()
+        return JsonResponse({'message': 'Publicacion eliminada exitosamente.'}, status=status.HTTP_200_OK)
