@@ -33,6 +33,9 @@ class Usuario(models.Model):
     def login(self,contraseña):
         return contraseña==self.contraseña
 
+    def follows(self, user_to_follow):
+        return RelacionSeguidor.objects.filter(seguidores=self, seguido=user_to_follow).exists()
+
 class RelacionSeguidor(models.Model):
     seguido = models.ForeignKey(Usuario, on_delete=CASCADE, related_name="follower")
     seguidores = models.ForeignKey(Usuario, on_delete=CASCADE, related_name="followed")

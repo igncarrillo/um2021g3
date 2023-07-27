@@ -23,12 +23,12 @@ class LoginController(APIView):
     def post(self, request):
         data = JSONParser().parse(request)
         usuario=Usuario.objects.filter(nombre_usuario=data['nombre_usuario']).first()
-        
+
         if usuario.login(data['contraseña']):
             return JsonResponse({'msg': 'Login successful'},status=status.HTTP_200_OK)
         else:
             return JsonResponse({'msg': 'Incorrect credentials'},status=status.HTTP_401_UNAUTHORIZED)
-        
+
 class UserController(APIView):
     def post(self, request):
         body_request = JSONParser().parse(request)
@@ -129,23 +129,44 @@ def tendencia(request):
             return JsonResponse(tendencia_data.data, status=status.HTTP_200_OK)
         return JsonResponse(tendencia_data.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+def followers(request, id):
+
+    usuario = get_object_or_404(Usuario, id=id)
+
+    if request.method == 'GET':
+        usuarios_seguidores = RelacionSeguidor.objects.filter(seguido=usuario)
+        if usuarios_seguidores.exists():
+            usuarios_seguidores_serialized = RelacionSeguidorSerializer(usuarios_seguidores, many=True)
+
+
+            seguidores = []
+            for i in usuarios_seguidores_serialized.data:
+                seguidores.append(Usuario.objects.get(pk=i["seguidores"]))
+            
+            seguidores_serialized = UsuarioSerializer(seguidores, many=True)
+            return JsonResponse({"seguidores":seguidores_serialized.data}, status=status.HTTP_200_OK)
+        return JsonResponse({'Error': 'No existe ninguna publicacion'}, status=status.HTTP_404_NOT_FOUND)
+
+
+
 @api_view(['POST', 'DELETE'])
 def follower(request, id):
 
     followed_id = request.data["followed_id"]
 
-    if followed_id == id:
-        return JsonResponse({'error': 'No puede seguirse a si mismo'}, status=status.HTTP_404_NOT_FOUND)
+    if int(followed_id) == int(id):
+        return JsonResponse({'error': 'No puede seguirse a si mismo'}, status=status.HTTP_409_CONFLICT)
 
     usuario_fd = get_object_or_404(Usuario, id=followed_id)
     usuario_fr = get_object_or_404(Usuario, id=id)
 
-    is_following = RelacionSeguidor.objects.filter(seguidores=usuario_fr, seguido=usuario_fd).exists()
+    is_following = usuario_fr.follows(usuario_fd)
 
     if request.method == 'POST':
 
         if is_following:
-            return JsonResponse({'mensaje': "ya sigue a este usuario"}, status=status.HTTP_200_OK)
+            return JsonResponse({'error': "ya sigue a este usuario"}, status=status.HTTP_409_CONFLICT)
 
         RelacionSeguidor.objects.create(seguidores=usuario_fr, seguido=usuario_fd)
         return JsonResponse({'mensaje': "usuario seguido"}, status=status.HTTP_200_OK)
@@ -153,7 +174,7 @@ def follower(request, id):
     if request.method == 'DELETE':
 
         if not is_following:
-            return JsonResponse({'mensaje': "usted no sigue a este usuario"}, status=status.HTTP_200_OK)
+            return JsonResponse({'error': "usted no sigue a este usuario"}, status=status.HTTP_409_CONFLICT)
 
         RelacionSeguidor.objects.filter(seguidores=usuario_fr, seguido=usuario_fd).delete()
         return JsonResponse({'mensaje': "usuario se ha dejado de seguir"}, status=status.HTTP_200_OK)
