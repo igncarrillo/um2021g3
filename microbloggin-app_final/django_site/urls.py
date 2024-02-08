@@ -24,12 +24,9 @@ urlpatterns = [
     re_path(r'^api/login$', views.LoginController.as_view()),
     re_path(r'^api/usuario_detalle/(?P<id>[0-9]+)$', views.UsuarioDetalleController.as_view()),
     re_path(r'^api/publicaciones$', views.PublicacionController.as_view()),
-    re_path(r'^api/perfil/(?P<id>[0-9]+)$', views.PerfilController.as_view()),
+    re_path(r'^api/publicacion/(?P<id>[0-9]+)$', views.PublicacionDetalleController.as_view()),
+    re_path(r'^api/usuarios/(?P<id>[0-9]+)/tablon$', views.TablonController.as_view()),
     re_path(r'^api/follower/(?P<id>[0-9]+)$', views.FollowerController.as_view()),
     re_path(r'^api/followers/(?P<id>[0-9]+)$', views.FollowersController.as_view()),
     re_path(r'^api/chat/(?P<id>[0-9]+)$', views.ChatController.as_view()),
-    re_path(r'^api/publicacion/(?P<id>[0-9]+)$', views.PublicacionDetalleController.as_view()),
-
-
-    re_path(r'^api/tendencia$', views.tendencia),
 ]

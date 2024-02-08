@@ -3,13 +3,12 @@ from datetime import datetime
 from django.http.response import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import status
-from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 from rest_framework.views import APIView
 
 from twitter.models import Usuario, Publicacion, MensajePriv, RelacionSeguidor
 from twitter.serializers import UsuarioSerializer, PublicacionSerializer, RelacionSeguidorSerializer, \
-    MensajePrivSerializer, TendenciaSerializer
+    MensajePrivSerializer
 
 
 # Create your views here.
@@ -36,25 +35,8 @@ class UserController(APIView):
             return JsonResponse(usuarios_serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(usuarios_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def get(self, request):
-        try:
-            usuarios = Usuario.objects.all()
-        except:
-            return JsonResponse({'msg': 'users not found'}, status=status.HTTP_404_NOT_FOUND)
-        usuarios_serializer = UsuarioSerializer(usuarios, many=True)
-        return JsonResponse(data=usuarios_serializer.data, safe=False, status=status.HTTP_200_OK)
-
 
 class UsuarioDetalleController(APIView):
-
-    def get(self, request, id):
-        try:
-            usuario = Usuario.objects.get(pk=id)
-        except Usuario.DoesNotExist:
-            return JsonResponse({'error': 'El usuario no existe'}, status=status.HTTP_404_NOT_FOUND)
-
-        usuarios_serializer = UsuarioSerializer(usuario)
-        return JsonResponse(usuarios_serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, id):
         try:
@@ -69,24 +51,8 @@ class UsuarioDetalleController(APIView):
         except Exception as ex:
             return JsonResponse({'error': str(ex)}, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, id):
-        try:
-            usuario = Usuario.objects.get(pk=id)
-        except Usuario.DoesNotExist:
-            return JsonResponse({'error': 'El usuario no existe'}, status=status.HTTP_404_NOT_FOUND)
-
-        usuario.delete()
-        return JsonResponse({'mensaje': 'usuario eliminada definitivamente!'}, status=status.HTTP_204_NO_CONTENT)
-
 
 class PublicacionController(APIView):
-    def get(self, request):
-        try:
-            publicaciones = Publicacion.objects.all()
-        except Publicacion.DoesNotExist:
-            return JsonResponse({'Error': 'No existe ninguna publicacion'}, status=status.HTTP_404_NOT_FOUND)
-        publicaciones_serializer = PublicacionSerializer(publicaciones, many = True)
-        return JsonResponse(publicaciones_serializer.data, safe=False, status=status.HTTP_200_OK)
 
     def post(self, request):
         publicacion_data = JSONParser().parse(request)
@@ -97,46 +63,20 @@ class PublicacionController(APIView):
         return JsonResponse(publicacion_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class PerfilController(APIView):
+class TablonController(APIView):
     def get(self, request, id):
         try:
-            usuario = Usuario.objects.get(pk=id)
-            publicacion = Publicacion.objects.filter(
-                usuario=id
-            )
+            _ = Usuario.objects.get(pk=id)
         except Usuario.DoesNotExist:
             return JsonResponse({'error': 'El usuario no existe'}, status=status.HTTP_404_NOT_FOUND)
 
-        if request.method == 'GET':
-            publicaciones = []
+        seguidos = RelacionSeguidor.objects.filter(seguidores__id=id)
 
-            publicacion_serializer = PublicacionSerializer(publicacion, many=True)
-            for i in publicacion_serializer.data:
-                publicaciones.append(i)
-            usuario_serializer = UsuarioSerializer(usuario)
+        publicaciones = Publicacion.objects.filter(
+            usuario__in=seguidos.values_list('seguido_id', flat=True)) | Publicacion.objects.filter(usuario_id=id)
 
-            usuarios_seguidos = RelacionSeguidor.objects.filter(seguidores=usuario)
-            usuarios_seguidores = RelacionSeguidor.objects.filter(seguido=usuario)
-
-            usuarios_seguidos_serialized = RelacionSeguidorSerializer(usuarios_seguidos, many=True)
-            usuarios_seguidores_serialized = RelacionSeguidorSerializer(usuarios_seguidores, many=True)
-
-            Dic = {}
-            Dic.update(usuario_serializer.data)
-            Dic.update({'Publicaciones': publicaciones})
-            Dic.update({'Seguidos': [i["seguido"] for i in usuarios_seguidos_serialized.data]})
-            Dic.update({'Seguidores': [i["seguidores"] for i in usuarios_seguidores_serialized.data]})
-            return JsonResponse(Dic, status=status.HTTP_200_OK)
-
-@api_view(['POST'])
-def tendencia(request):
-    if request.method == 'POST':
-        tendencia_data = JSONParser().parse(request)
-        tendencia_serializer = TendenciaSerializer(data=tendencia_data)
-        if tendencia_serializer.is_valid():
-            tendencia_serializer.save()
-            return JsonResponse(tendencia_data.data, status=status.HTTP_200_OK)
-        return JsonResponse(tendencia_data.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = PublicacionSerializer(publicaciones.order_by("fecha"), many=True)
+        return JsonResponse(serializer.data, status=status.HTTP_200_OK, safe=False)
 
 
 class FollowersController(APIView):
@@ -155,7 +95,7 @@ class FollowersController(APIView):
 
                 seguidores_serialized = UsuarioSerializer(seguidores, many=True)
                 return JsonResponse({"seguidores": seguidores_serialized.data}, status=status.HTTP_200_OK)
-            return JsonResponse({'Error': 'No existe ninguna publicacion'}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({'Error': 'No tiene seguidores'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class FollowerController(APIView):
