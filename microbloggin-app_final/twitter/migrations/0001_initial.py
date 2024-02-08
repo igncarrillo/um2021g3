@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
             name='Usuario',
             fields=[
                 ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('nombre_usuario', models.CharField(default='', max_length=255)),
+                ('nombre_usuario', models.CharField(max_length=255)),
                 ('contraseña', models.CharField(max_length=255)),
                 ('telefono', models.PositiveIntegerField(default=99999999)),
                 ('nombre', models.CharField(default='', max_length=255)),
