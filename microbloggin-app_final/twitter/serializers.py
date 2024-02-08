@@ -1,28 +1,27 @@
-from django.db import models
-from django.db.models import fields
 from rest_framework import serializers
-from rest_framework.fields import DictField
+
 from twitter.models import Usuario, Publicacion, Tendencias, MensajePriv, RelacionSeguidor
 
-class UsuarioSerializer(serializers.ModelSerializer):
 
+class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
         fields = '__all__'
 
-class PublicacionSerializer(serializers.ModelSerializer):
 
+class PublicacionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Publicacion
         fields = '__all__'
 
-class TendenciaSerializer(serializers.ModelSerializer):
 
+class TendenciaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tendencias
         fields = {'id'
-        'etiqueta'
-        }
+                  'etiqueta'
+                  }
+
 
 class RelacionSeguidorSerializer(serializers.ModelSerializer):
     class Meta:
@@ -31,7 +30,6 @@ class RelacionSeguidorSerializer(serializers.ModelSerializer):
 
 
 class MensajePrivSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = MensajePriv
         fields = '__all__'

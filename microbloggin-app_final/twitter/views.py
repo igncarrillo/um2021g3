@@ -1,19 +1,16 @@
-from collections import defaultdict
-import re
-from django.http.request import HttpRequest
-from django.shortcuts import render
-
-from django.http.response import HttpResponse, JsonResponse
-from rest_framework.parsers import JSONParser
-from rest_framework import status
-from rest_framework.utils.json import strict_constant
-
-from twitter.models import Usuario, Publicacion, Tendencias, MensajePriv, RelacionSeguidor
-from twitter.serializers import UsuarioSerializer, PublicacionSerializer, RelacionSeguidorSerializer, MensajePrivSerializer
-from rest_framework.decorators import api_view
-from rest_framework.views import APIView
 from datetime import datetime
+
+from django.http.response import JsonResponse
 from django.shortcuts import get_object_or_404
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.parsers import JSONParser
+from rest_framework.views import APIView
+
+from twitter.models import Usuario, Publicacion, MensajePriv, RelacionSeguidor
+from twitter.serializers import UsuarioSerializer, PublicacionSerializer, RelacionSeguidorSerializer, \
+    MensajePrivSerializer, TendenciaSerializer
+
 
 # Create your views here.
 
@@ -22,12 +19,13 @@ class LoginController(APIView):
 
     def post(self, request):
         data = JSONParser().parse(request)
-        usuario=Usuario.objects.filter(nombre_usuario=data['nombre_usuario']).first()
+        usuario = Usuario.objects.filter(nombre_usuario=data['nombre_usuario']).first()
 
         if usuario.login(data['contraseña']):
-            return JsonResponse({'msg': 'Login successful'},status=status.HTTP_200_OK)
+            return JsonResponse({'msg': 'Login successful'}, status=status.HTTP_200_OK)
         else:
-            return JsonResponse({'msg': 'Incorrect credentials'},status=status.HTTP_401_UNAUTHORIZED)
+            return JsonResponse({'msg': 'Incorrect credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 class UserController(APIView):
     def post(self, request):
@@ -45,6 +43,7 @@ class UserController(APIView):
             return JsonResponse({'msg': 'users not found'}, status=status.HTTP_404_NOT_FOUND)
         usuarios_serializer = UsuarioSerializer(usuarios, many=True)
         return JsonResponse(data=usuarios_serializer.data, safe=False, status=status.HTTP_200_OK)
+
 
 class UsuarioDetalleController(APIView):
 
@@ -67,7 +66,7 @@ class UsuarioDetalleController(APIView):
         try:
             Usuario.objects.filter(pk=id).update(**usuario_data)
             return JsonResponse({'update': usuario_data}, status=status.HTTP_200_OK)
-        except Exception as ex: 
+        except Exception as ex:
             return JsonResponse({'error': str(ex)}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, id):
@@ -78,6 +77,7 @@ class UsuarioDetalleController(APIView):
 
         usuario.delete()
         return JsonResponse({'mensaje': 'usuario eliminada definitivamente!'}, status=status.HTTP_204_NO_CONTENT)
+
 
 class PublicacionController(APIView):
     def get(self, request):
@@ -95,7 +95,8 @@ class PublicacionController(APIView):
             publicacion_serializer.save()
             return JsonResponse(publicacion_serializer.data, status=status.HTTP_200_OK)
         return JsonResponse(publicacion_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 class PerfilController(APIView):
     def get(self, request, id):
         try:
@@ -137,6 +138,7 @@ def tendencia(request):
             return JsonResponse(tendencia_data.data, status=status.HTTP_200_OK)
         return JsonResponse(tendencia_data.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class FollowersController(APIView):
     def get(self, request, id):
 
@@ -150,10 +152,11 @@ class FollowersController(APIView):
                 seguidores = []
                 for i in usuarios_seguidores_serialized.data:
                     seguidores.append(Usuario.objects.get(pk=i["seguidores"]))
-                
+
                 seguidores_serialized = UsuarioSerializer(seguidores, many=True)
-                return JsonResponse({"seguidores":seguidores_serialized.data}, status=status.HTTP_200_OK)
+                return JsonResponse({"seguidores": seguidores_serialized.data}, status=status.HTTP_200_OK)
             return JsonResponse({'Error': 'No existe ninguna publicacion'}, status=status.HTTP_404_NOT_FOUND)
+
 
 class FollowerController(APIView):
     def post(self, request, id):
@@ -192,15 +195,17 @@ class FollowerController(APIView):
         RelacionSeguidor.objects.filter(seguidores=usuario_fr, seguido=usuario_fd).delete()
         return JsonResponse({'mensaje': "usuario se ha dejado de seguir"}, status=status.HTTP_200_OK)
 
+
 class ChatController(APIView):
     def get(self, request, id):
         receptor = get_object_or_404(Usuario, id=id)
         emisor = get_object_or_404(Usuario, id=request.data["user"])
-        mensajes = MensajePriv.objects.filter(emisor=emisor, receptor=receptor) | MensajePriv.objects.filter(emisor=receptor, receptor=emisor)
+        mensajes = MensajePriv.objects.filter(emisor=emisor, receptor=receptor) | MensajePriv.objects.filter(
+            emisor=receptor, receptor=emisor)
         mensajes = mensajes.order_by("fecha")
         mensajes_serialized = MensajePrivSerializer(mensajes, many=True)
 
-        return JsonResponse({"msg":mensajes_serialized.data}, status=status.HTTP_200_OK)
+        return JsonResponse({"msg": mensajes_serialized.data}, status=status.HTTP_200_OK)
 
     def post(self, request, id):
         emisor = get_object_or_404(Usuario, id=id)
@@ -208,12 +213,12 @@ class ChatController(APIView):
 
         contenido = request.data["contenido"]
         mensaje = MensajePriv.objects.create(
-            contenido = contenido,
-            receptor = receptor,
-            emisor = emisor
+            contenido=contenido,
+            receptor=receptor,
+            emisor=emisor
         )
 
-        return JsonResponse({"msg": mensaje.contenido, "fecha":str(mensaje.fecha)}, status=status.HTTP_200_OK)
+        return JsonResponse({"msg": mensaje.contenido, "fecha": str(mensaje.fecha)}, status=status.HTTP_200_OK)
 
 
 class PublicacionDetalleController(APIView):
@@ -225,7 +230,7 @@ class PublicacionDetalleController(APIView):
 
         publicacion_serializer = PublicacionSerializer(publicacion)
         return JsonResponse(publicacion_serializer.data, status=status.HTTP_200_OK)
-    
+
     def put(self, request, id):
         try:
             publicacion = Publicacion.objects.get(pk=id)
@@ -240,7 +245,7 @@ class PublicacionDetalleController(APIView):
         publicacion.save()
         publicacion_serializer = PublicacionSerializer(publicacion)
         return JsonResponse(publicacion_serializer.data, status=status.HTTP_200_OK)
-    
+
     def delete(self, request, id):
         try:
             publicacion = Publicacion.objects.get(pk=id)
