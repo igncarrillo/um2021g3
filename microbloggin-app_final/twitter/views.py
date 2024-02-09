@@ -162,15 +162,6 @@ class ChatController(APIView):
 
 
 class PublicacionDetalleController(APIView):
-    def get(self, request, id):
-        try:
-            publicacion = Publicacion.objects.get(pk=id)
-        except Publicacion.DoesNotExist:
-            return JsonResponse({'Error': 'No existe ninguna publicacion'}, status=status.HTTP_404_NOT_FOUND)
-
-        publicacion_serializer = PublicacionSerializer(publicacion)
-        return JsonResponse(publicacion_serializer.data, status=status.HTTP_200_OK)
-
     def put(self, request, id):
         try:
             publicacion = Publicacion.objects.get(pk=id)

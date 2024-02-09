@@ -55,8 +55,8 @@ class Publicacion(models.Model):
 
 class Tendencias(models.Model):
     id = models.AutoField(primary_key=True)
-    # fecha
     etiqueta = models.ForeignKey(Publicacion, on_delete=CASCADE)
+
 
 class MensajePriv(models.Model):
     id = models.AutoField(primary_key=True)
